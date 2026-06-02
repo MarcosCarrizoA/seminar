@@ -4,14 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { usePageTitle } from "../hooks/usePageTitle";
 import {
   apiGetEvents,
-  apiGetCuratedPlaces,
   apiGetPlaylists,
   apiGetPlaylistItems,
-  apiAddPlaylistItem,
-  type CuratedPlace,
+  type Playlist,
   type PlaylistItem,
 } from "../api/client";
-import { KansaiMap, type MapFilter } from "../components/KansaiMap";
+import { KansaiMap, type MapFilter, type UserMapItem } from "../components/KansaiMap";
 import type { EventSummary } from "../components/EventCard";
 import { MapFilterBar } from "../components/MapFilterBar";
 import { AddPlaceModal } from "../components/AddPlaceModal";
@@ -28,14 +26,13 @@ export function Home() {
   usePageTitle("nav.home");
 
   const [tab, setTab] = useState<Tab>("map");
-  const [filter, setFilter] = useState<MapFilter>("all");
+  const [filter, setFilter] = useState<MapFilter>("events");
   const [listFilter, setListFilter] = useState<ListFilter>("all");
 
   // Data
   const [events, setEvents] = useState<EventSummary[]>([]);
-  const [curated, setCurated] = useState<CuratedPlace[]>([]);
-  const [userItems, setUserItems] = useState<PlaylistItem[]>([]);
-  const [defaultPlaylistId, setDefaultPlaylistId] = useState<number | null>(null);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [userItems, setUserItems] = useState<UserMapItem[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,28 +41,26 @@ export function Home() {
   const [addingPlace, setAddingPlace] = useState(false);
   const [pendingPin, setPendingPin] = useState<{ lat: number; lon: number; address?: string } | null>(null);
 
-  // "Add to playlist" from curated popup
-  const [curatedToAdd, setCuratedToAdd] = useState<CuratedPlace | null>(null);
-
   async function loadAll() {
     setLoading(true);
     setError(null);
     try {
-      const [evts, crts] = await Promise.all([
-        apiGetEvents(),
-        apiGetCuratedPlaces(),
-      ]);
+      const evts = await apiGetEvents();
       setEvents(evts);
-      setCurated(crts);
 
       if (user) {
-        const playlists = await apiGetPlaylists();
-        const def = playlists.find((p) => p.isDefault) ?? playlists[0] ?? null;
+        const ps = await apiGetPlaylists();
+        setPlaylists(ps);
+        const def = ps.find((p) => p.isDefault) ?? ps[0] ?? null;
         if (def) {
-          setDefaultPlaylistId(def.id);
-          const items = await loadAllUserItems(playlists.map((p) => p.id));
+          const items = await loadAllUserItems(ps);
           setUserItems(items);
+          setFilter((curr) => curr === "events" ? (`playlist:${def.id}` as MapFilter) : curr);
         }
+      } else {
+        setPlaylists([]);
+        setUserItems([]);
+        setFilter("events");
       }
     } catch {
       setError(t("home.loadError"));
@@ -74,19 +69,20 @@ export function Home() {
     }
   }
 
-  async function loadAllUserItems(playlistIds: number[]): Promise<PlaylistItem[]> {
-    const all: PlaylistItem[] = [];
-    for (const id of playlistIds) {
-      const items = await apiGetPlaylistItems(id);
-      all.push(...items);
+  async function loadAllUserItems(ps: Playlist[]): Promise<UserMapItem[]> {
+    const all: UserMapItem[] = [];
+    for (const p of ps) {
+      const items = await apiGetPlaylistItems(p.id);
+      all.push(...items.map((i) => ({ ...i, playlistId: p.id })));
     }
     return all;
   }
 
   async function refreshUserItems() {
     if (!user) return;
-    const playlists = await apiGetPlaylists();
-    const items = await loadAllUserItems(playlists.map((p) => p.id));
+    const ps = await apiGetPlaylists();
+    setPlaylists(ps);
+    const items = await loadAllUserItems(ps);
     setUserItems(items);
   }
 
@@ -114,13 +110,8 @@ export function Home() {
     refreshUserItems();
   }
 
-  function handleAddToPlaylist(place: CuratedPlace) {
-    setCuratedToAdd(place);
-  }
-
   async function handleSaveFromModal() {
     setPendingPin(null);
-    setCuratedToAdd(null);
     await refreshUserItems();
   }
 
@@ -154,7 +145,16 @@ export function Home() {
           <div className="home-toolbar-right">
             {tab === "map" && (
               <>
-                <MapFilterBar active={filter} onChange={setFilter} />
+                {user ? (
+                  <MapFilterBar active={filter} onChange={setFilter} playlists={playlists} />
+                ) : (
+                  <button
+                    className={`map-filter-chip${filter === "events" ? " active" : ""}`}
+                    onClick={() => setFilter("events")}
+                  >
+                    🔵 {t("map.eventsOnly")}
+                  </button>
+                )}
                 {!addingPlace ? (
                   <button className="btn btn-secondary" onClick={() => user ? setAddingPlace(true) : navigate("/login")}>
                     📍 {t("map.addPlace")}
@@ -200,13 +200,10 @@ export function Home() {
         ) : tab === "map" ? (
           <KansaiMap
             events={events}
-            curatedPlaces={curated}
             userItems={user ? userItems : []}
             filter={filter}
             addingPlace={addingPlace}
-            isLoggedIn={!!user}
             onMapClick={user ? handleMapClick : undefined}
-            onAddToPlaylist={user ? handleAddToPlaylist : undefined}
             onDeleteUserItem={user ? () => refreshUserItems() : undefined}
           />
         ) : (
@@ -287,18 +284,6 @@ export function Home() {
         />
       )}
 
-      {/* Add-to-playlist modal (from curated popup) */}
-      {curatedToAdd && (
-        <AddPlaceModal
-          lat={curatedToAdd.latitude}
-          lon={curatedToAdd.longitude}
-          address={curatedToAdd.address}
-          defaultTitle={curatedToAdd.title}
-          curatedPlaceId={curatedToAdd.id}
-          onClose={() => setCuratedToAdd(null)}
-          onSaved={handleSaveFromModal}
-        />
-      )}
     </div>
   );
 }

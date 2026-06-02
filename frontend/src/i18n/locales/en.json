@@ -133,6 +133,7 @@
     "placeholderDesc": "What will happen? What to bring? Any notes…"
   },
   "map": {
+    "eventsOnly": "Events",
     "filter": {
       "all": "All",
       "events": "Events",

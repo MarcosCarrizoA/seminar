@@ -61,20 +61,12 @@ export function AddPlaceModal({
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,.5)",
-        zIndex: 9000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      className="modal-overlay"
       onClick={onClose}
     >
       <div
-        className="card"
-        style={{ width: 360, maxWidth: "90vw", padding: 24 }}
+        className="card modal-card"
+        style={{ maxWidth: 420, padding: 24 }}
         onClick={(e) => e.stopPropagation()}
       >
         <h3 style={{ marginBottom: 16, fontSize: 18 }}>{t("playlist.modalTitle")}</h3>

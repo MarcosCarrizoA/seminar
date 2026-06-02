@@ -4,7 +4,7 @@ import L from "leaflet";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { KANSAI_CENTER, KANSAI_DEFAULT_ZOOM, KANSAI_MAX_BOUNDS, isInKansai } from "../geo/kansai";
-import type { CuratedPlace, PlaylistItem } from "../api/client";
+import type { PlaylistItem } from "../api/client";
 import type { EventSummary } from "./EventCard";
 export type { EventSummary } from "./EventCard";
 
@@ -21,22 +21,19 @@ function makeCircleIcon(color: string, border: string, size = 14) {
 }
 
 const eventIcon = makeCircleIcon("#3b82f6", "#1d4ed8", 16);
-const curatedIcon = makeCircleIcon("#22c55e", "#15803d", 16);
 const userIcon = makeCircleIcon("#f97316", "#c2410c", 16);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type MapFilter = "all" | "events" | "curated" | "myplaces";
+export type MapFilter = "events" | `playlist:${number}`;
+export type UserMapItem = PlaylistItem & { playlistId: number };
 
 interface Props {
   events: EventSummary[];
-  curatedPlaces: CuratedPlace[];
-  userItems: PlaylistItem[];
+  userItems: UserMapItem[];
   filter: MapFilter;
   addingPlace: boolean;
-  isLoggedIn: boolean;
   onMapClick?: (lat: number, lon: number) => void;
-  onAddToPlaylist?: (place: CuratedPlace) => void;
   onDeleteUserItem?: (item: PlaylistItem) => void;
 }
 
@@ -74,21 +71,22 @@ function fmt(iso: string) {
 
 export function KansaiMap({
   events,
-  curatedPlaces,
   userItems,
   filter,
   addingPlace,
-  isLoggedIn,
   onMapClick,
-  onAddToPlaylist,
   onDeleteUserItem,
 }: Props) {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const showEvents = filter === "all" || filter === "events";
-  const showCurated = filter === "all" || filter === "curated";
-  const showUser = filter === "all" || filter === "myplaces";
+  const showEvents = filter === "events";
+  const selectedPlaylistId =
+    filter.startsWith("playlist:") ? Number(filter.replace("playlist:", "")) : null;
+  const visibleUserItems =
+    selectedPlaylistId != null
+      ? userItems.filter((i) => i.playlistId === selectedPlaylistId)
+      : [];
 
   return (
     <MapContainer
@@ -138,56 +136,9 @@ export function KansaiMap({
             </Marker>
           ))}
 
-      {/* Curated markers — green */}
-      {showCurated &&
-        curatedPlaces.map((p) => (
-          <Marker
-            key={`cp-${p.id}`}
-            position={[p.latitude, p.longitude]}
-            icon={curatedIcon}
-          >
-            <Popup>
-              <strong>{p.title}</strong>
-              <br />
-              <span
-                style={{
-                  fontSize: 11,
-                  background: "var(--surface-raised)",
-                  borderRadius: 4,
-                  padding: "1px 5px",
-                  textTransform: "capitalize",
-                }}
-              >
-                {p.category}
-              </span>
-              <br />
-              <small style={{ display: "block", marginTop: 4 }}>{p.description}</small>
-              <small style={{ color: "var(--text-secondary)" }}>{p.address}</small>
-              <br />
-              {isLoggedIn ? (
-                <button
-                  className="btn btn-secondary"
-                  style={{ marginTop: 6, padding: "4px 10px", fontSize: 12 }}
-                  onClick={() => onAddToPlaylist && onAddToPlaylist(p)}
-                >
-                  {t("map.addToPlaylist")}
-                </button>
-              ) : (
-                <button
-                  className="btn btn-secondary"
-                  style={{ marginTop: 6, padding: "4px 10px", fontSize: 12 }}
-                  onClick={() => navigate("/login")}
-                >
-                  {t("map.loginToAdd")}
-                </button>
-              )}
-            </Popup>
-          </Marker>
-        ))}
-
       {/* User place markers — orange */}
-      {showUser &&
-        userItems
+      {selectedPlaylistId != null &&
+        visibleUserItems
           .filter((i) => i.latitude != null && i.longitude != null)
           .map((i) => (
             <Marker

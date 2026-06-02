@@ -76,7 +76,7 @@ router.patch("/:id", requireAuth, async (req: AuthedRequest, res) => {
   }
 });
 
-// DELETE /playlists/:id — delete (cannot delete default)
+// DELETE /playlists/:id — delete (default can also be deleted)
 router.delete("/:id", requireAuth, async (req: AuthedRequest, res) => {
   const id = Number(req.params.id);
   if (!id) return res.status(400).json({ error: "invalid_id" });
@@ -88,9 +88,6 @@ router.delete("/:id", requireAuth, async (req: AuthedRequest, res) => {
     if (!playlist) return res.status(404).json({ error: "not_found" });
     if (Number(playlist.user_id) !== req.auth!.userId) {
       return res.status(403).json({ error: "forbidden" });
-    }
-    if (playlist.is_default) {
-      return res.status(400).json({ error: "cannot_delete_default" });
     }
     await db.run(`DELETE FROM place_playlists WHERE id = ?`, id);
     res.json({ ok: true });

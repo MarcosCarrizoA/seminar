@@ -34,14 +34,23 @@ export default function MyPlaces() {
   const [editTitle, setEditTitle] = useState("");
   const [editNotes, setEditNotes] = useState("");
 
-  async function loadPlaylists() {
+  async function loadPlaylists(nextActiveId?: number | null) {
     setLoadingPlaylists(true);
     const ps = await apiGetPlaylists();
     setPlaylists(ps);
     setLoadingPlaylists(false);
-    if (!activeId && ps.length) {
+    const target = nextActiveId === undefined ? activeId : nextActiveId;
+    const stillExists = target != null && ps.some((p) => p.id === target);
+    if (stillExists) {
+      setActiveId(target);
+      return;
+    }
+    if (ps.length) {
       const def = ps.find((p) => p.isDefault) ?? ps[0];
       setActiveId(def.id);
+    } else {
+      setActiveId(null);
+      setItems([]);
     }
   }
 
@@ -76,8 +85,7 @@ export default function MyPlaces() {
   async function handleDeletePlaylist(id: number) {
     if (!confirm(t("places.confirmDelete"))) return;
     await apiDeletePlaylist(id);
-    if (activeId === id) setActiveId(null);
-    loadPlaylists();
+    await loadPlaylists(activeId === id ? null : activeId);
   }
 
   async function handleDeleteItem(itemId: number) {
@@ -106,28 +114,20 @@ export default function MyPlaces() {
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", padding: "24px 16px" }}>
-      <h1 className="page-title" style={{ marginBottom: 20 }}>{t("places.title")}</h1>
+    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+      <div className="page-header" style={{ marginBottom: 12 }}>
+        <h1 className="page-title">{t("places.title")}</h1>
+      </div>
 
-      <div style={{ display: "flex", gap: 16, alignItems: "flex-start", flexWrap: "wrap" }}>
+      <div className="places-layout">
         {/* Sidebar — playlist list */}
-        <div style={{ width: 220, flexShrink: 0 }}>
-          <div className="card" style={{ padding: 0, overflow: "hidden" }}>
-            <div
-              style={{
-                padding: "12px 16px",
-                borderBottom: "1px solid var(--border)",
-                fontWeight: 600,
-                fontSize: 14,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
+        <aside className="places-sidebar">
+          <div className="card">
+            <div className="places-sidebar-header">
               {t("places.playlists")}
               <button
                 className="btn btn-secondary"
-                style={{ padding: "3px 10px", fontSize: 12 }}
+                style={{ padding: "5px 10px", fontSize: 12 }}
                 onClick={() => setShowNew(true)}
               >
                 {t("places.newPlaylist")}
@@ -135,10 +135,7 @@ export default function MyPlaces() {
             </div>
 
             {showNew && (
-              <form
-                onSubmit={handleCreatePlaylist}
-                style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)", display: "flex", gap: 6 }}
-              >
+              <form onSubmit={handleCreatePlaylist} style={{ padding: "10px 12px", borderBottom: "1px solid var(--border)", display: "flex", gap: 6 }}>
                 <input
                   className="input"
                   value={newName}
@@ -163,15 +160,7 @@ export default function MyPlaces() {
                 <div
                   key={p.id}
                   onClick={() => setActiveId(p.id)}
-                  style={{
-                    padding: "10px 16px",
-                    cursor: "pointer",
-                    background: activeId === p.id ? "var(--primary-light, #eff6ff)" : "transparent",
-                    borderLeft: activeId === p.id ? "3px solid var(--primary)" : "3px solid transparent",
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                  }}
+                  className={`playlist-row${activeId === p.id ? " active" : ""}`}
                 >
                   {renamingId === p.id ? (
                     <div style={{ display: "flex", gap: 4 }} onClick={(e) => e.stopPropagation()}>
@@ -202,27 +191,27 @@ export default function MyPlaces() {
                       >
                         {t("places.rename")}
                       </button>
-                      {!p.isDefault && (
-                        <button
-                          style={{ fontSize: 11, background: "none", border: "none", cursor: "pointer", color: "var(--danger)", padding: 0 }}
-                          onClick={(e) => { e.stopPropagation(); handleDeletePlaylist(p.id); }}
-                        >
-                          {t("places.delete")}
-                        </button>
-                      )}
+                      <button
+                        style={{ fontSize: 11, background: "none", border: "none", cursor: "pointer", color: "var(--danger)", padding: 0 }}
+                        onClick={(e) => { e.stopPropagation(); handleDeletePlaylist(p.id); }}
+                      >
+                        {t("places.delete")}
+                      </button>
                     </div>
                   )}
                 </div>
               ))
             )}
           </div>
-        </div>
+        </aside>
 
         {/* Main content — items */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <section>
           {activePlaylist ? (
             <>
-              <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12 }}>{activePlaylist.name}</h2>
+              <div className="card" style={{ marginBottom: 12, padding: "12px 16px" }}>
+                <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{activePlaylist.name}</h2>
+              </div>
 
               {loadingItems ? (
                 <p style={{ color: "var(--text-secondary)" }}>{t("common.loading")}</p>
@@ -236,7 +225,7 @@ export default function MyPlaces() {
                   {items.map((item) => {
                     const catColor = CATEGORY_COLORS[item.category] ?? CATEGORY_COLORS.custom;
                     return (
-                      <div key={item.id} className="card" style={{ padding: "14px 16px" }}>
+                      <div key={item.id} className="card place-item-card">
                         {editingItemId === item.id ? (
                           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                             <input
@@ -291,15 +280,17 @@ export default function MyPlaces() {
                                 <p style={{ fontSize: 12, color: "var(--text-secondary)", margin: 0 }}>📍 {item.address}</p>
                               )}
                             </div>
-                            <div style={{ display: "flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
+                            <div className="place-item-actions">
                               <button
-                                style={{ fontSize: 12, background: "none", border: "1px solid var(--border)", borderRadius: 4, padding: "3px 8px", cursor: "pointer" }}
+                                className="btn btn-secondary"
+                                style={{ fontSize: 12, padding: "4px 10px" }}
                                 onClick={() => { setEditingItemId(item.id); setEditTitle(item.title); setEditNotes(item.notes); }}
                               >
                                 {t("common.edit")}
                               </button>
                               <button
-                                style={{ fontSize: 12, background: "none", border: "1px solid var(--danger)", borderRadius: 4, padding: "3px 8px", cursor: "pointer", color: "var(--danger)" }}
+                                className="btn btn-secondary"
+                                style={{ fontSize: 12, padding: "4px 10px", color: "var(--danger)", borderColor: "var(--danger)" }}
                                 onClick={() => handleDeleteItem(item.id)}
                               >
                                 {t("common.remove")}
@@ -318,7 +309,7 @@ export default function MyPlaces() {
               {t("places.noPlaylistSelected")}
             </div>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );

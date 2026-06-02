@@ -133,6 +133,7 @@
     "placeholderDesc": "何をするの？持ち物は？メモがあれば…"
   },
   "map": {
+    "eventsOnly": "イベント",
     "filter": {
       "all": "すべて",
       "events": "イベント",
