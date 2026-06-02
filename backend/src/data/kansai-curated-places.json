@@ -1,0 +1,202 @@
+[
+  {
+    "title": "Fushimi Inari Taisha",
+    "title_ja": "伏見稲荷大社",
+    "description": "Thousands of iconic vermilion torii gates winding up a forested mountain. One of Kyoto's most visited and photographed shrines.",
+    "category": "shrine",
+    "address": "68 Fukakusa Yabunouchi-cho, Fushimi Ward, Kyoto",
+    "latitude": 34.9671,
+    "longitude": 135.7727,
+    "sort_order": 1
+  },
+  {
+    "title": "Kiyomizu-dera",
+    "title_ja": "清水寺",
+    "description": "UNESCO World Heritage Buddhist temple perched on a hillside with a famous wooden stage overlooking the city of Kyoto.",
+    "category": "temple",
+    "address": "1-294 Kiyomizu, Higashiyama Ward, Kyoto",
+    "latitude": 34.9948,
+    "longitude": 135.7850,
+    "sort_order": 2
+  },
+  {
+    "title": "Osaka Castle",
+    "title_ja": "大阪城",
+    "description": "Magnificent 16th-century castle surrounded by a moat and beautiful park. Features a museum inside with samurai history.",
+    "category": "landmark",
+    "address": "1-1 Osakajo, Chuo Ward, Osaka",
+    "latitude": 34.6873,
+    "longitude": 135.5262,
+    "sort_order": 3
+  },
+  {
+    "title": "Dotonbori",
+    "title_ja": "道頓堀",
+    "description": "Osaka's most famous entertainment district, packed with neon signs, street food, and the iconic Glico running man billboard.",
+    "category": "food",
+    "address": "Dotonbori, Chuo Ward, Osaka",
+    "latitude": 34.6687,
+    "longitude": 135.5011,
+    "sort_order": 4
+  },
+  {
+    "title": "Nara Park & Todai-ji",
+    "title_ja": "奈良公園・東大寺",
+    "description": "Wander freely among friendly deer roaming the park. Todai-ji's Great Buddha Hall is Japan's largest wooden building.",
+    "category": "nature",
+    "address": "Nara Park, Nara City, Nara",
+    "latitude": 34.6851,
+    "longitude": 135.8399,
+    "sort_order": 5
+  },
+  {
+    "title": "Arashiyama Bamboo Grove",
+    "title_ja": "嵐山竹林",
+    "description": "Walk through a towering bamboo forest in western Kyoto. Nearby Tenryu-ji garden and the monkey park are also worth visiting.",
+    "category": "nature",
+    "address": "Sagaogurayama Tabuchiyama-cho, Ukyo Ward, Kyoto",
+    "latitude": 35.0094,
+    "longitude": 135.6686,
+    "sort_order": 6
+  },
+  {
+    "title": "Kinkaku-ji (Golden Pavilion)",
+    "title_ja": "金閣寺",
+    "description": "Breathtaking Zen temple whose top two floors are covered in gold leaf, perfectly reflected in the surrounding pond.",
+    "category": "temple",
+    "address": "1 Kinkakujicho, Kita Ward, Kyoto",
+    "latitude": 35.0394,
+    "longitude": 135.7292,
+    "sort_order": 7
+  },
+  {
+    "title": "Umeda Sky Building",
+    "title_ja": "梅田スカイビル",
+    "description": "Futuristic twin-tower skyscraper with a \"Floating Garden\" rooftop observatory offering 360° views of Osaka.",
+    "category": "landmark",
+    "address": "1-1-88 Oyodonaka, Kita Ward, Osaka",
+    "latitude": 34.7057,
+    "longitude": 135.4903,
+    "sort_order": 8
+  },
+  {
+    "title": "Universal Studios Japan",
+    "title_ja": "ユニバーサル・スタジオ・ジャパン",
+    "description": "World-class theme park featuring Harry Potter, Super Nintendo World, Minions, and much more — great for a full day out.",
+    "category": "entertainment",
+    "address": "2-1-33 Sakurajima, Konohana Ward, Osaka",
+    "latitude": 34.6654,
+    "longitude": 135.4324,
+    "sort_order": 9
+  },
+  {
+    "title": "Kobe Harborland",
+    "title_ja": "ハーバーランド",
+    "description": "Vibrant waterfront district in Kobe with shopping, restaurants, and beautiful views of the harbour and Rokko mountains.",
+    "category": "city",
+    "address": "Harborland, Chuo Ward, Kobe",
+    "latitude": 34.6775,
+    "longitude": 135.1884,
+    "sort_order": 10
+  },
+  {
+    "title": "Himeji Castle",
+    "title_ja": "姫路城",
+    "description": "Japan's finest surviving feudal castle, a UNESCO World Heritage Site known as the White Heron Castle for its dazzling white exterior.",
+    "category": "landmark",
+    "address": "68 Honmachi, Himeji, Hyogo",
+    "latitude": 34.8394,
+    "longitude": 134.6939,
+    "sort_order": 11
+  },
+  {
+    "title": "Nishiki Market",
+    "title_ja": "錦市場",
+    "description": "Kyoto's famous narrow covered market street — \"Kyoto's Kitchen\" — lined with over 100 stalls selling pickles, tofu, sweets, and fresh food.",
+    "category": "food",
+    "address": "Nishiki Market, Nakagyo Ward, Kyoto",
+    "latitude": 35.0048,
+    "longitude": 135.7654,
+    "sort_order": 12
+  },
+  {
+    "title": "Osaka Aquarium Kaiyukan",
+    "title_ja": "海遊館",
+    "description": "One of the world's largest aquariums, home to whale sharks, manta rays, and sea otters displayed in spectacular cylindrical tanks.",
+    "category": "entertainment",
+    "address": "1-1-10 Kaigandori, Minato Ward, Osaka",
+    "latitude": 34.6553,
+    "longitude": 135.4288,
+    "sort_order": 13
+  },
+  {
+    "title": "Philosopher's Path (Kyoto)",
+    "title_ja": "哲学の道",
+    "description": "A peaceful stone path following a canal lined with hundreds of cherry trees — stunning in spring and serene year-round.",
+    "category": "nature",
+    "address": "Jodo-ji, Sakyo Ward, Kyoto",
+    "latitude": 35.0227,
+    "longitude": 135.7941,
+    "sort_order": 14
+  },
+  {
+    "title": "Kuromon Market Osaka",
+    "title_ja": "黒門市場",
+    "description": "Osaka's kitchen market: fresh seafood, grilled skewers, and local produce eaten straight from the stalls. Lively and authentic.",
+    "category": "food",
+    "address": "Nipponbashi, Chuo Ward, Osaka",
+    "latitude": 34.6657,
+    "longitude": 135.5092,
+    "sort_order": 15
+  },
+  {
+    "title": "Arima Onsen",
+    "title_ja": "有馬温泉",
+    "description": "One of Japan's oldest hot spring towns, nestled in the Rokko mountains near Kobe — perfect for a day trip and relaxation.",
+    "category": "nature",
+    "address": "Arima-cho, Kita Ward, Kobe",
+    "latitude": 34.7985,
+    "longitude": 135.2456,
+    "sort_order": 16
+  },
+  {
+    "title": "Kyoto Imperial Palace",
+    "title_ja": "京都御所",
+    "description": "The historic residence of Japan's imperial family, surrounded by a beautiful public park popular for picnics and morning runs.",
+    "category": "landmark",
+    "address": "3 Kyotogyoen, Kamigyo Ward, Kyoto",
+    "latitude": 35.0253,
+    "longitude": 135.7624,
+    "sort_order": 17
+  },
+  {
+    "title": "Gion District",
+    "title_ja": "祇園",
+    "description": "Kyoto's famous geisha district with traditional machiya townhouses, teahouses, and the iconic Hanamikoji Street.",
+    "category": "city",
+    "address": "Gion, Higashiyama Ward, Kyoto",
+    "latitude": 35.0038,
+    "longitude": 135.7785,
+    "sort_order": 18
+  },
+  {
+    "title": "Hikone Castle",
+    "title_ja": "彦根城",
+    "description": "One of Japan's best-preserved original castles, overlooking Lake Biwa. Surrounded by beautiful gardens and a moat.",
+    "category": "landmark",
+    "address": "1-1 Konkicho, Hikone, Shiga",
+    "latitude": 35.2762,
+    "longitude": 136.2522,
+    "sort_order": 19
+  },
+  {
+    "title": "Tenjinbashisuji Shopping Street",
+    "title_ja": "天神橋筋商店街",
+    "description": "Japan's longest shopping arcade stretching 2.6km through Osaka — affordable food, local shops, and everyday Osaka life.",
+    "category": "city",
+    "address": "Tenjinbashisuji, Kita Ward, Osaka",
+    "latitude": 34.7011,
+    "longitude": 135.5119,
+    "sort_order": 20
+  }
+]
