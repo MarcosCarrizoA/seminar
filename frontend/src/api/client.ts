@@ -51,6 +51,7 @@ export async function apiCreateEvent(params: {
   title: string;
   description: string;
   maxParticipants: number;
+  feeAmount?: number;
   startsAt: string;
   endsAt: string;
   address: string;
@@ -58,6 +59,25 @@ export async function apiCreateEvent(params: {
 }) {
   const res = await api.post("/events", params);
   return res.data as { id: number };
+}
+
+export async function apiUpdateEvent(
+  id: number | string,
+  params: {
+    title: string;
+    description: string;
+    maxParticipants: number;
+    feeAmount?: number;
+    startsAt: string;
+    endsAt: string;
+    address: string;
+    verificationPhrase?: string;
+    latitude?: number;
+    longitude?: number;
+  }
+) {
+  const res = await api.patch(`/events/${id}`, params);
+  return res.data as { ok: true };
 }
 
 export async function apiJoinEvent(id: number | string) {
@@ -83,6 +103,35 @@ export async function apiDeleteEvent(id: number | string) {
 export async function apiGeocodeAddress(address: string) {
   const res = await api.post("/events/geocode", { address });
   return res.data as { latitude: number; longitude: number };
+}
+
+export async function apiKickParticipant(eventId: number | string, userId: number) {
+  const res = await api.delete(`/events/${eventId}/participants/${userId}`);
+  return res.data;
+}
+
+// ─── Announcements ───────────────────────────────────────────────────────────
+
+export interface Announcement {
+  id: number;
+  content: string;
+  created_at: string;
+  author_name: string;
+}
+
+export async function apiGetAnnouncements(eventId: number | string) {
+  const res = await api.get(`/events/${eventId}/announcements`);
+  return res.data as Announcement[];
+}
+
+export async function apiPostAnnouncement(eventId: number | string, content: string) {
+  const res = await api.post(`/events/${eventId}/announcements`, { content });
+  return res.data as Announcement;
+}
+
+export async function apiDeleteAnnouncement(eventId: number | string, annId: number) {
+  const res = await api.delete(`/events/${eventId}/announcements/${annId}`);
+  return res.data;
 }
 
 // ─── Curated Places ──────────────────────────────────────────────────────────

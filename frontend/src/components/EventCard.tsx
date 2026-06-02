@@ -7,6 +7,7 @@ export type EventSummary = {
   startsAt: string;
   endsAt: string;
   address: string;
+  feeAmount: number | null;
   participantCount: number;
   maxParticipants: number;
   hasVerificationPhrase: boolean;
@@ -46,6 +47,11 @@ export function EventCard({
           <div style={{ fontSize: 13, color: "var(--text-secondary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             📍 {event.address}
           </div>
+          {event.feeAmount != null && (
+            <div style={{ fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>
+              💴 {t("event.fee")}: ¥{Number(event.feeAmount).toLocaleString()}
+            </div>
+          )}
         </div>
         <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
           {event.isJoined && <span className="badge badge-blue">✓ {t("event.joined")}</span>}

@@ -38,6 +38,7 @@ export async function getDb() {
           title TEXT NOT NULL,
           description TEXT NOT NULL,
           max_participants INTEGER NOT NULL CHECK (max_participants >= 1),
+          fee_amount REAL,
           starts_at TEXT NOT NULL,
           ends_at TEXT NOT NULL,
           address TEXT NOT NULL,
@@ -94,6 +95,16 @@ export async function getDb() {
           FOREIGN KEY (playlist_id) REFERENCES place_playlists(id) ON DELETE CASCADE,
           FOREIGN KEY (curated_place_id) REFERENCES curated_places(id) ON DELETE SET NULL
         );
+
+        CREATE TABLE IF NOT EXISTS event_announcements (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          event_id INTEGER NOT NULL,
+          author_id INTEGER NOT NULL,
+          content TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
+          FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE
+        );
       `);
 
       // Lightweight migrations for existing dev DBs
@@ -111,6 +122,9 @@ export async function getDb() {
       }
       if (!colNames.has("cancellation_reason")) {
         await db.exec(`ALTER TABLE events ADD COLUMN cancellation_reason TEXT`);
+      }
+      if (!colNames.has("fee_amount")) {
+        await db.exec(`ALTER TABLE events ADD COLUMN fee_amount REAL`);
       }
 
       // Seed curated places if empty

@@ -53,6 +53,7 @@ router.get("/", optionalAuth, async (req: AuthedRequest, res) => {
         e.title,
         e.description,
         e.max_participants,
+        e.fee_amount,
         e.starts_at,
         e.ends_at,
         e.address,
@@ -76,6 +77,7 @@ router.get("/", optionalAuth, async (req: AuthedRequest, res) => {
       title: row.title,
       description: row.description,
       maxParticipants: row.max_participants,
+      feeAmount: row.fee_amount ?? null,
       startsAt: row.starts_at,
       endsAt: row.ends_at,
       address: row.address,
@@ -148,6 +150,7 @@ router.get("/:id", optionalAuth, async (req: AuthedRequest, res) => {
       title: event.title,
       description: event.description,
       maxParticipants: event.max_participants,
+      feeAmount: event.fee_amount ?? null,
       startsAt: event.starts_at,
       endsAt: event.ends_at,
       address: event.address,
@@ -175,6 +178,7 @@ router.post("/", requireAuth, async (req: AuthedRequest, res) => {
     title,
     description,
     maxParticipants,
+    feeAmount,
     startsAt,
     endsAt,
     address,
@@ -201,6 +205,9 @@ router.post("/", requireAuth, async (req: AuthedRequest, res) => {
   if (verificationPhrase && String(verificationPhrase).trim().length < 4) {
     return res.status(400).json({ error: "verification_phrase_too_short" });
   }
+  if (feeAmount != null && (!Number.isFinite(Number(feeAmount)) || Number(feeAmount) < 0)) {
+    return res.status(400).json({ error: "invalid_fee" });
+  }
 
   // Kansai check — only validate when coords are available
   if (lat != null && lon != null && !isInKansai(lat, lon)) {
@@ -222,16 +229,18 @@ router.post("/", requireAuth, async (req: AuthedRequest, res) => {
       `
       INSERT INTO events (
         creator_id, title, description, max_participants, starts_at,
+        fee_amount,
         ends_at,
         address, latitude, longitude, verification_phrase
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       req.auth!.userId,
       title,
       description,
       maxParticipants,
       startsAt,
+      feeAmount == null || feeAmount === "" ? null : Number(feeAmount),
       endsAt,
       address,
       lat,
@@ -248,6 +257,110 @@ router.post("/", requireAuth, async (req: AuthedRequest, res) => {
     );
 
     res.status(201).json({ id: eventId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+router.patch("/:id", requireAuth, async (req: AuthedRequest, res) => {
+  const eventId = Number(req.params.id);
+  if (!eventId) return res.status(400).json({ error: "invalid_id" });
+
+  const {
+    title,
+    description,
+    maxParticipants,
+    feeAmount,
+    startsAt,
+    endsAt,
+    address,
+    latitude,
+    longitude,
+    verificationPhrase,
+  } = req.body || {};
+
+  if (!title || !description || !maxParticipants || !startsAt || !endsAt || !address) {
+    return res.status(400).json({ error: "missing_fields" });
+  }
+  if (String(title).trim().length < 3) {
+    return res.status(400).json({ error: "title_too_short" });
+  }
+  if (String(description).trim().length < 10) {
+    return res.status(400).json({ error: "description_too_short" });
+  }
+  const max = Number(maxParticipants);
+  if (!Number.isFinite(max) || max < 1 || max > 500) {
+    return res.status(400).json({ error: "invalid_max_participants" });
+  }
+  if (feeAmount != null && (!Number.isFinite(Number(feeAmount)) || Number(feeAmount) < 0)) {
+    return res.status(400).json({ error: "invalid_fee" });
+  }
+
+  let lat = latitude ?? null;
+  let lon = longitude ?? null;
+  if (lat == null || lon == null) {
+    const geo = await geocodeAddress(address);
+    if (geo) {
+      lat = geo.latitude;
+      lon = geo.longitude;
+    }
+  }
+
+  if (verificationPhrase && String(verificationPhrase).trim().length < 4) {
+    return res.status(400).json({ error: "verification_phrase_too_short" });
+  }
+  if (lat != null && lon != null && !isInKansai(Number(lat), Number(lon))) {
+    return res.status(400).json({ error: "outside_kansai" });
+  }
+
+  const starts = new Date(startsAt);
+  const ends = new Date(endsAt);
+  if (Number.isNaN(starts.getTime()) || Number.isNaN(ends.getTime())) {
+    return res.status(400).json({ error: "invalid_datetime" });
+  }
+  if (ends.getTime() <= starts.getTime()) {
+    return res.status(400).json({ error: "ends_must_be_after_starts" });
+  }
+
+  try {
+    const db = await getDb();
+    const existing = await db.get(
+      "SELECT creator_id FROM events WHERE id = ?",
+      eventId
+    );
+    if (!existing) return res.status(404).json({ error: "not_found" });
+    if (Number(existing.creator_id) !== req.auth!.userId) {
+      return res.status(403).json({ error: "forbidden" });
+    }
+
+    const participantsRow = await db.get(
+      "SELECT COUNT(*) AS c FROM event_participants WHERE event_id = ?",
+      eventId
+    );
+    const participantCount = Number(participantsRow?.c ?? 0);
+    if (max < participantCount) {
+      return res.status(400).json({ error: "max_below_participants" });
+    }
+
+    await db.run(
+      `UPDATE events
+       SET title = ?, description = ?, max_participants = ?, starts_at = ?, ends_at = ?,
+           fee_amount = ?, address = ?, latitude = ?, longitude = ?, verification_phrase = ?
+       WHERE id = ?`,
+      String(title).trim(),
+      String(description).trim(),
+      max,
+      starts.toISOString(),
+      ends.toISOString(),
+      feeAmount == null || feeAmount === "" ? null : Number(feeAmount),
+      String(address).trim(),
+      lat,
+      lon,
+      verificationPhrase ? String(verificationPhrase).trim() : null,
+      eventId
+    );
+    res.json({ ok: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "server_error" });
@@ -354,6 +467,122 @@ router.delete("/:id", requireAuth, async (req: AuthedRequest, res) => {
     }
 
     await db.run("DELETE FROM events WHERE id = ?", eventId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── Announcements ──────────────────────────────────────────────────────────
+
+router.get("/:id/announcements", optionalAuth, async (req: AuthedRequest, res) => {
+  const eventId = Number(req.params.id);
+  if (!eventId) return res.status(400).json({ error: "invalid_id" });
+
+  try {
+    const db = await getDb();
+    const rows = await db.all(
+      `SELECT a.id, a.content, a.created_at, u.display_name AS author_name
+       FROM event_announcements a
+       JOIN users u ON u.id = a.author_id
+       WHERE a.event_id = ?
+       ORDER BY a.created_at ASC`,
+      eventId
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+router.post("/:id/announcements", requireAuth, async (req: AuthedRequest, res) => {
+  const eventId = Number(req.params.id);
+  if (!eventId) return res.status(400).json({ error: "invalid_id" });
+
+  const { content } = req.body || {};
+  if (!content || typeof content !== "string" || content.trim().length === 0) {
+    return res.status(400).json({ error: "content_required" });
+  }
+  if (content.trim().length > 1000) {
+    return res.status(400).json({ error: "content_too_long" });
+  }
+
+  try {
+    const db = await getDb();
+    const event = await db.get("SELECT creator_id FROM events WHERE id = ?", eventId);
+    if (!event) return res.status(404).json({ error: "not_found" });
+    if (Number(event.creator_id) !== req.auth!.userId) {
+      return res.status(403).json({ error: "forbidden" });
+    }
+
+    const result = await db.run(
+      `INSERT INTO event_announcements (event_id, author_id, content) VALUES (?, ?, ?)`,
+      eventId,
+      req.auth!.userId,
+      content.trim()
+    );
+    const row = await db.get(
+      `SELECT a.id, a.content, a.created_at, u.display_name AS author_name
+       FROM event_announcements a JOIN users u ON u.id = a.author_id WHERE a.id = ?`,
+      result.lastID
+    );
+    res.status(201).json(row);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+router.delete("/:id/announcements/:annId", requireAuth, async (req: AuthedRequest, res) => {
+  const eventId = Number(req.params.id);
+  const annId = Number(req.params.annId);
+  if (!eventId || !annId) return res.status(400).json({ error: "invalid_id" });
+
+  try {
+    const db = await getDb();
+    const event = await db.get("SELECT creator_id FROM events WHERE id = ?", eventId);
+    if (!event) return res.status(404).json({ error: "not_found" });
+    if (Number(event.creator_id) !== req.auth!.userId) {
+      return res.status(403).json({ error: "forbidden" });
+    }
+
+    await db.run(
+      `DELETE FROM event_announcements WHERE id = ? AND event_id = ?`,
+      annId,
+      eventId
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "server_error" });
+  }
+});
+
+// ─── Kick participant ────────────────────────────────────────────────────────
+
+router.delete("/:id/participants/:userId", requireAuth, async (req: AuthedRequest, res) => {
+  const eventId = Number(req.params.id);
+  const targetUserId = Number(req.params.userId);
+  if (!eventId || !targetUserId) return res.status(400).json({ error: "invalid_id" });
+
+  try {
+    const db = await getDb();
+    const event = await db.get("SELECT creator_id FROM events WHERE id = ?", eventId);
+    if (!event) return res.status(404).json({ error: "not_found" });
+    if (Number(event.creator_id) !== req.auth!.userId) {
+      return res.status(403).json({ error: "forbidden" });
+    }
+    if (targetUserId === req.auth!.userId) {
+      return res.status(400).json({ error: "cannot_kick_yourself" });
+    }
+
+    await db.run(
+      `DELETE FROM event_participants WHERE event_id = ? AND user_id = ?`,
+      eventId,
+      targetUserId
+    );
     res.json({ ok: true });
   } catch (err) {
     console.error(err);

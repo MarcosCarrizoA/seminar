@@ -24,6 +24,12 @@ function vMaxPeople(v: number): string | null {
   if (v > 500) return "validation.maxParticipantsMax";
   return null;
 }
+function vFee(v: string): string | null {
+  if (!v.trim()) return null;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0) return "validation.feeNonNegative";
+  return null;
+}
 function vStartsAt(v: string): string | null {
   if (!v) return "validation.startsAtRequired";
   return null;
@@ -53,6 +59,7 @@ type TouchedFields = {
   endsAt: boolean;
   address: boolean;
   verificationPhrase: boolean;
+  feeAmount: boolean;
 };
 
 export function CreateEvent() {
@@ -70,14 +77,16 @@ export function CreateEvent() {
   const [geoLat, setGeoLat] = useState<number | null>(null);
   const [geoLon, setGeoLon] = useState<number | null>(null);
   const [verificationPhrase, setVerificationPhrase] = useState("");
+  const [feeAmount, setFeeAmount] = useState("");
 
   const [touched, setTouched] = useState<TouchedFields>({
     title: false, description: false, maxPeople: false,
     startsAt: false, endsAt: false, address: false, verificationPhrase: false,
+    feeAmount: false,
   });
   const touch = (field: keyof TouchedFields) => setTouched((p) => ({ ...p, [field]: true }));
   const touchAll = () =>
-    setTouched({ title: true, description: true, maxPeople: true, startsAt: true, endsAt: true, address: true, verificationPhrase: true });
+    setTouched({ title: true, description: true, maxPeople: true, startsAt: true, endsAt: true, address: true, verificationPhrase: true, feeAmount: true });
 
   const errors = {
     title: vTitle(title),
@@ -87,6 +96,7 @@ export function CreateEvent() {
     endsAt: vEndsAt(startsAt, endsAt),
     address: vAddress(address),
     verificationPhrase: vPhrase(verificationPhrase),
+    feeAmount: vFee(feeAmount),
   };
   const hasErrors = Object.values(errors).some(Boolean);
 
@@ -108,6 +118,7 @@ export function CreateEvent() {
         endsAt: new Date(endsAt).toISOString(),
         address: address.trim(),
         verificationPhrase: verificationPhrase.trim() || undefined,
+        feeAmount: feeAmount.trim() ? Number(feeAmount) : undefined,
         latitude: geoLat ?? undefined,
         longitude: geoLon ?? undefined,
       };
@@ -121,6 +132,8 @@ export function CreateEvent() {
         setServerError(t("create.endsMustBeAfterStarts"));
       } else if (code === "verification_phrase_too_short") {
         setServerError(t("create.verificationPhraseTooShort"));
+      } else if (code === "invalid_fee") {
+        setServerError(t("validation.feeNonNegative"));
       } else {
         setServerError(t("errors.server"));
       }
@@ -210,6 +223,23 @@ export function CreateEvent() {
                 onBlur={() => touch("endsAt")}
               />
               <FieldError message={touched.endsAt ? (errors.endsAt ? t(errors.endsAt) : null) : null} />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t("create.feeAmount")}</label>
+              <input
+                className="input"
+                type="number"
+                min={0}
+                step="0.01"
+                value={feeAmount}
+                onChange={(e) => setFeeAmount(e.target.value)}
+                onBlur={() => touch("feeAmount")}
+                placeholder="e.g. 500"
+              />
+              <FieldError
+                message={touched.feeAmount ? (errors.feeAmount ? t(errors.feeAmount) : null) : null}
+                hint={t("create.feeHint")}
+              />
             </div>
           </div>
         </div>
