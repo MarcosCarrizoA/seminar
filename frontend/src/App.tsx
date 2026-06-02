@@ -23,22 +23,10 @@ function TopBar() {
             Kizuna
           </Link>
           {user && (
-            <>
-              <Link
-                to="/create"
-                className="btn btn-primary hide-mobile"
-                style={{ padding: "6px 14px", fontSize: 13 }}
-              >
-                + {t("app.createEvent")}
-              </Link>
-              <Link
-                to="/my-places"
-                className="btn btn-ghost hide-mobile"
-                style={{ padding: "6px 14px", fontSize: 13 }}
-              >
-                {t("app.myPlaces")}
-              </Link>
-            </>
+            <div className="topbar-main-links hide-mobile">
+              <Link to="/">{t("nav.home")}</Link>
+              <Link to="/my-places">{t("app.myPlaces")}</Link>
+            </div>
           )}
         </div>
 
@@ -46,13 +34,20 @@ function TopBar() {
           <LanguageToggle />
           {user ? (
             <div className="row" style={{ gap: 8 }}>
+              <Link
+                to="/create"
+                className="btn btn-primary"
+                style={{ padding: "8px 14px", fontSize: 13 }}
+              >
+                + {t("app.createEvent")}
+              </Link>
               <span
                 className="hide-mobile"
                 style={{ fontSize: 13, color: "var(--text-secondary)" }}
               >
                 {user.displayName}
               </span>
-              <button className="btn btn-secondary" style={{ padding: "6px 12px", fontSize: 13 }} onClick={logout}>
+              <button className="btn btn-secondary" style={{ padding: "8px 12px", fontSize: 13 }} onClick={logout}>
                 {t("auth.logout")}
               </button>
             </div>

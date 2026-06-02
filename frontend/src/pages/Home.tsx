@@ -125,176 +125,53 @@ export function Home() {
   }
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "calc(100vh - 56px)",
-        overflow: "hidden",
-      }}
-    >
-      {/* Hero strip */}
-      <div
-        style={{
-          padding: "10px 20px",
-          background: "linear-gradient(90deg, #1e3a8a 0%, #2563eb 100%)",
-          color: "#fff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          flexShrink: 0,
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>{t("home.title")}</h1>
-          <p style={{ fontSize: 13, margin: 0, opacity: 0.85 }}>{t("home.subtitle")}</p>
-        </div>
-        {user ? (
-          <Link
-            to="/create"
-            className="btn btn-primary"
-            style={{
-              background: "#fff",
-              color: "#2563eb",
-              fontWeight: 600,
-              padding: "7px 16px",
-              fontSize: 13,
-              whiteSpace: "nowrap",
-            }}
-          >
-            + {t("app.createEvent")}
-          </Link>
-        ) : (
-          <div style={{ display: "flex", gap: 8 }}>
-            <Link
-              to="/login"
-              style={{
-                background: "#fff",
-                color: "#2563eb",
-                fontWeight: 600,
-                padding: "7px 16px",
-                fontSize: 13,
-                borderRadius: 8,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {t("auth.login")}
-            </Link>
-            <Link
-              to="/register"
-              style={{
-                background: "rgba(255,255,255,0.2)",
-                color: "#fff",
-                fontWeight: 600,
-                padding: "7px 16px",
-                fontSize: 13,
-                borderRadius: 8,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                border: "1px solid rgba(255,255,255,0.4)",
-              }}
-            >
-              {t("auth.register")}
-            </Link>
+    <div className="home-shell">
+      <section className="home-hero">
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, flexWrap: "wrap" }}>
+          <div>
+            <h1 className="page-title" style={{ fontSize: 30, marginBottom: 6 }}>{t("home.title")}</h1>
+            <p className="home-hero-subtitle">{t("home.subtitle")}</p>
           </div>
-        )}
-      </div>
-
-      {/* Tab + filter row */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "6px 12px",
-          background: "var(--surface)",
-          borderBottom: "1px solid var(--border)",
-          flexShrink: 0,
-          flexWrap: "wrap",
-          gap: 6,
-        }}
-      >
-        {/* Tab switcher */}
-        <div style={{ display: "flex", gap: 4 }}>
-          <button
-            onClick={() => setTab("map")}
-            style={{
-              padding: "5px 14px",
-              borderRadius: 6,
-              border: "none",
-              background: tab === "map" ? "var(--primary)" : "transparent",
-              color: tab === "map" ? "#fff" : "var(--text-secondary)",
-              fontWeight: tab === "map" ? 600 : 400,
-              cursor: "pointer",
-              fontSize: 13,
-            }}
-          >
-            {t("app.map")}
-          </button>
-          <button
-            onClick={() => setTab("list")}
-            style={{
-              padding: "5px 14px",
-              borderRadius: 6,
-              border: "none",
-              background: tab === "list" ? "var(--primary)" : "transparent",
-              color: tab === "list" ? "#fff" : "var(--text-secondary)",
-              fontWeight: tab === "list" ? 600 : 400,
-              cursor: "pointer",
-              fontSize: 13,
-            }}
-          >
-            {t("app.list")}
-          </button>
+          {user ? (
+            <Link to="/create" className="btn btn-primary">+ {t("app.createEvent")}</Link>
+          ) : (
+            <div className="row" style={{ gap: 8 }}>
+              <Link to="/login" className="btn btn-primary">{t("auth.login")}</Link>
+              <Link to="/register" className="btn btn-secondary">{t("auth.register")}</Link>
+            </div>
+          )}
         </div>
+      </section>
 
-        {/* Map filters — only shown in map tab */}
-        {tab === "map" && (
-          <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-            <MapFilterBar active={filter} onChange={setFilter} />
-            {!addingPlace && (
-              <button
-                className="btn btn-secondary"
-                style={{ padding: "5px 12px", fontSize: 12, whiteSpace: "nowrap" }}
-                onClick={() => user ? setAddingPlace(true) : navigate("/login")}
-              >
-                📍 {t("map.addPlace")}
-              </button>
-            )}
-            {addingPlace && (
-              <button
-                className="btn btn-secondary"
-                style={{ padding: "5px 12px", fontSize: 12 }}
-                onClick={() => setAddingPlace(false)}
-              >
-                ✕ {t("home.cancelAddPlace")}
-              </button>
+      <section className="home-content-card">
+        <div className="home-toolbar">
+          <div className="home-toolbar-left">
+            <div className="pill-tabs">
+              <button className={tab === "map" ? "active" : ""} onClick={() => setTab("map")}>{t("app.map")}</button>
+              <button className={tab === "list" ? "active" : ""} onClick={() => setTab("list")}>{t("app.list")}</button>
+            </div>
+          </div>
+          <div className="home-toolbar-right">
+            {tab === "map" && (
+              <>
+                <MapFilterBar active={filter} onChange={setFilter} />
+                {!addingPlace ? (
+                  <button className="btn btn-secondary" onClick={() => user ? setAddingPlace(true) : navigate("/login")}>
+                    📍 {t("map.addPlace")}
+                  </button>
+                ) : (
+                  <button className="btn btn-secondary" onClick={() => setAddingPlace(false)}>
+                    ✕ {t("home.cancelAddPlace")}
+                  </button>
+                )}
+              </>
             )}
           </div>
-        )}
-      </div>
-
-      {/* Adding-place banner */}
-      {addingPlace && (
-        <div
-          style={{
-            padding: "6px 16px",
-            background: "#a855f722",
-            borderBottom: "1px solid #a855f766",
-            fontSize: 13,
-            color: "#7e22ce",
-            textAlign: "center",
-            flexShrink: 0,
-          }}
-        >
-          {t("home.addingPlace")}
         </div>
-      )}
 
-      {/* Main content */}
-      <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
+        {addingPlace && <div className="map-banner">{t("home.addingPlace")}</div>}
+
+        <div className="home-content-scroll">
         {loading ? (
           <div
             style={{
@@ -335,24 +212,15 @@ export function Home() {
         ) : (
           <div style={{ height: "100%", overflowY: "auto" }}>
             {/* List sub-filter bar */}
-            <div style={{
-              display: "flex",
-              gap: 6,
-              padding: "10px 16px",
-              borderBottom: "1px solid var(--border)",
-              background: "var(--surface)",
-              position: "sticky",
-              top: 0,
-              zIndex: 10,
-            }}>
+            <div className="home-list-subtoolbar">
               {(["all", "joined", "notJoined"] as ListFilter[]).map((f) => (
                 <button
                   key={f}
                   onClick={() => setListFilter(f)}
                   style={{
-                    padding: "5px 16px",
+                    padding: "6px 14px",
                     borderRadius: 999,
-                    border: listFilter === f ? "2px solid var(--primary)" : "2px solid var(--border)",
+                    border: listFilter === f ? "1.5px solid var(--primary)" : "1.5px solid var(--border)",
                     background: listFilter === f ? "var(--primary)" : "transparent",
                     color: listFilter === f ? "#fff" : "var(--text-secondary)",
                     fontWeight: listFilter === f ? 600 : 400,
@@ -405,7 +273,8 @@ export function Home() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </section>
 
       {/* Add-place modal (map click) */}
       {pendingPin && (
