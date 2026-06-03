@@ -130,7 +130,12 @@ export async function getDb() {
       // Seed curated places if empty
       const curatedCount = await db.get(`SELECT COUNT(*) AS c FROM curated_places`);
       if (Number(curatedCount.c) === 0) {
-        const seedPath = path.join(__dirname, "data", "kansai-curated-places.json");
+        const seedPath = path.join(
+          __dirname,
+          "..",
+          "data",
+          "kansai-curated-places.json"
+        );
         const places = JSON.parse(fs.readFileSync(seedPath, "utf8")) as Array<{
           title: string;
           title_ja?: string;
