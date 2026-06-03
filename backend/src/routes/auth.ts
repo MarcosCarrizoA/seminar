@@ -2,6 +2,7 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { getDb, createDefaultPlaylistForUser } from "../db";
 import { AuthedRequest, signToken, requireAuth } from "../middleware/auth";
+import { getAuthCookieOptions } from "../config/cookies";
 
 const router = Router();
 
@@ -55,10 +56,7 @@ router.post("/register", async (req, res) => {
     const token = signToken({ userId });
 
     res
-      .cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-      })
+      .cookie("token", token, getAuthCookieOptions())
       .status(201)
       .json({
         id: userId,
@@ -95,10 +93,7 @@ router.post("/login", async (req, res) => {
 
     const token = signToken({ userId: user.id });
     res
-      .cookie("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-      })
+      .cookie("token", token, getAuthCookieOptions())
       .json({
         id: user.id,
         email: email.toLowerCase(),
@@ -111,8 +106,8 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/logout", (req, res) => {
-  res.clearCookie("token").json({ ok: true });
+router.post("/logout", (_req, res) => {
+  res.clearCookie("token", getAuthCookieOptions()).json({ ok: true });
 });
 
 router.get("/me", requireAuth, async (req: AuthedRequest, res) => {
