@@ -63,6 +63,7 @@ router.post("/register", async (req, res) => {
         email,
         displayName,
         preferredLocale: locale,
+        token,
       });
   } catch (err) {
     console.error(err);
@@ -99,6 +100,7 @@ router.post("/login", async (req, res) => {
         email: email.toLowerCase(),
         displayName: user.display_name,
         preferredLocale: user.preferred_locale,
+        token,
       });
   } catch (err) {
     console.error(err);

@@ -2,9 +2,37 @@ import axios from "axios";
 
 const apiBaseUrl = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
 
+const TOKEN_KEY = "kizuna_token";
+
+export function getAuthToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setAuthToken(token: string | null) {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // ignore storage errors (e.g. private mode)
+  }
+}
+
 export const api = axios.create({
   baseURL: apiBaseUrl || undefined,
   withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const token = getAuthToken();
+  if (token) {
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export async function apiRegister(params: {
@@ -14,6 +42,7 @@ export async function apiRegister(params: {
   preferredLocale?: "en" | "ja";
 }) {
   const res = await api.post("/auth/register", params);
+  if (res.data?.token) setAuthToken(res.data.token);
   return res.data;
 }
 
@@ -22,12 +51,17 @@ export async function apiLogin(params: {
   password: string;
 }) {
   const res = await api.post("/auth/login", params);
+  if (res.data?.token) setAuthToken(res.data.token);
   return res.data;
 }
 
 export async function apiLogout() {
-  const res = await api.post("/auth/logout");
-  return res.data;
+  try {
+    const res = await api.post("/auth/logout");
+    return res.data;
+  } finally {
+    setAuthToken(null);
+  }
 }
 
 export async function apiMe() {

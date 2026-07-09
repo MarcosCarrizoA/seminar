@@ -11,12 +11,21 @@ export interface AuthedRequest extends Request {
   auth?: AuthPayload;
 }
 
+/** Reads the JWT from the Authorization: Bearer header, falling back to the cookie. */
+function extractToken(req: AuthedRequest): string | undefined {
+  const header = req.headers?.authorization;
+  if (header && header.startsWith("Bearer ")) {
+    return header.slice(7).trim();
+  }
+  return req.cookies?.token;
+}
+
 export function requireAuth(
   req: AuthedRequest,
   res: Response,
   next: NextFunction
 ) {
-  const token = req.cookies?.token;
+  const token = extractToken(req);
   if (!token) {
     return res.status(401).json({ error: "unauthorized" });
   }
@@ -30,13 +39,13 @@ export function requireAuth(
   }
 }
 
-/** Populates req.auth if a valid token cookie exists, but never rejects. */
+/** Populates req.auth if a valid token (header or cookie) exists, but never rejects. */
 export function optionalAuth(
   req: AuthedRequest,
   _res: Response,
   next: NextFunction
 ) {
-  const token = req.cookies?.token;
+  const token = extractToken(req);
   if (token) {
     try {
       req.auth = jwt.verify(token, JWT_SECRET) as AuthPayload;
